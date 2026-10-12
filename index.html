@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMC Network Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="mast" id="top">
+    <div class="mast-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">MMC</span>
+        <span class="brand-name">Network Explorer</span>
+      </a>
+      <div class="cancer-picker" id="cancer-picker">
+        <span class="picker-label">Cancer type</span>
+        <button type="button" class="picker-button" id="picker-button" aria-haspopup="listbox" aria-expanded="false">
+          <span id="picker-current">—</span>
+          <span class="picker-caret" aria-hidden="true"></span>
+        </button>
+        <ul class="picker-menu" id="picker-menu" role="listbox" hidden></ul>
+      </div>
+    </div>
+    <div class="mast-rule"></div>
+  </header>
+
+  <nav class="nav-bar">
+    <div class="nav-inner">
+      <a href="#about">Overview</a>
+      <a href="#explorer">Explorer</a>
+      <a href="#associations">Associations</a>
+      <a href="#modules">Modules</a>
+      <a href="#citation">Citation</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Paper information: replace the placeholder text below with the final manuscript details. -->
+    <section class="paper" id="about">
+      <div class="paper-main">
+        <p class="eyebrow">Research Article</p>
+        <h1>Coupling tissue morphology to gene programs across human cancers</h1>
+        <p class="authors">
+          First Author<sup>1</sup>, Second Author<sup>1</sup>, Third Author<sup>2</sup>, Corresponding Author<sup>1,*</sup>
+        </p>
+        <p class="affiliations">
+          <sup>1</sup> Department of Automation, Tsinghua University, Beijing, China ·
+          <sup>2</sup> Collaborating Institute, City, Country
+        </p>
+        <div class="paper-links">
+          <a class="paper-link" href="#" aria-disabled="true">Paper</a>
+          <a class="paper-link" href="#" aria-disabled="true">Code</a>
+          <a class="paper-link" href="#" aria-disabled="true">Data</a>
+          <a class="paper-link ghost" href="#citation">Cite</a>
+        </div>
+        <div class="abstract">
+          <h2>Abstract</h2>
+          <p>
+            Histological morphology and molecular state are two complementary readouts of a tumour, yet how
+            specific tissue patterns couple to gene programs remains poorly mapped. Here we learn a
+            morphology–molecule coupling (MMC) network from paired whole-slide images and transcriptomic
+            profiles, linking pathology foundation-model features to individual genes through comparable
+            association weights. Spectral clustering organises the joint network into refined modules, which
+            we annotate with Hallmark gene sets and vision–language morphology semantics. The resulting
+            atlas recovers known axes such as Wnt–β-catenin signalling in glandular tumour epithelium and
+            epithelial–mesenchymal transition in stromal and serrated architecture, and exposes
+            morphology-anchored candidates for further study. This explorer provides interactive access to
+            the network for each cancer type.
+          </p>
+        </div>
+      </div>
+
+      <aside class="dataset-card">
+        <p class="dataset-kicker">Current dataset</p>
+        <h2 id="dataset-title">—</h2>
+        <p class="dataset-code" id="dataset-code"></p>
+        <dl class="metrics" id="metrics"></dl>
+      </aside>
+    </section>
+
+    <section class="workspace" id="explorer">
+      <aside class="panel controls">
+        <p class="step"><span class="step-no">1</span>Select</p>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" data-mode="gene" aria-selected="true">Genes</button>
+          <button class="tab" role="tab" data-mode="module" aria-selected="false">Modules</button>
+        </div>
+
+        <div id="gene-tools" class="tool-group">
+          <label class="field-label" for="search">Gene symbol</label>
+          <div class="search">
+            <input id="search" type="search" placeholder="e.g. CEACAM5" autocomplete="off" spellcheck="false">
+            <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+          </div>
+          <p id="search-note" class="search-note" hidden></p>
+          <div id="gene-chips" class="chips"></div>
+          <p class="field-label">Examples</p>
+          <div id="gene-presets" class="presets"></div>
+        </div>
+
+        <div id="module-tools" class="tool-group" hidden>
+          <p class="field-label">Refined modules</p>
+          <div id="module-list" class="module-list"></div>
+        </div>
+
+        <button id="clear" class="text-button" type="button">Clear selection</button>
+      </aside>
+
+      <div class="panel stage">
+        <div class="stage-head">
+          <div>
+            <p class="step"><span class="step-no">2</span>Explore</p>
+            <h2 id="stage-title">No selection</h2>
+            <p class="stage-kicker" id="stage-kicker"></p>
+          </div>
+          <div class="stage-tools" aria-label="View controls">
+            <button type="button" class="icon-button" id="zoom-out" title="Zoom out">−</button>
+            <button type="button" class="icon-button" id="zoom-in" title="Zoom in">+</button>
+            <button type="button" class="icon-button" id="zoom-fit" title="Fit to view">⤢</button>
+            <button type="button" class="icon-button wide" id="export-svg" title="Export SVG">SVG</button>
+          </div>
+        </div>
+        <div id="network" class="network-surface"></div>
+        <div class="stage-foot">
+          <div class="legend" id="legend"></div>
+          <p class="gestures">
+            <span><kbd>Hover</kbd> preview</span>
+            <span><kbd>Click</kbd> focus</span>
+            <span><kbd>Double-click</kbd> expand</span>
+            <span><kbd>Drag</kbd> pan</span>
+            <span><kbd>Scroll</kbd> zoom</span>
+          </p>
+        </div>
+      </div>
+
+      <aside class="panel details">
+        <p class="step details-step"><span class="step-no">3</span>Inspect</p>
+        <div id="details"></div>
+      </aside>
+    </section>
+
+    <section class="block" id="associations">
+      <div class="block-head">
+        <h2>Associations</h2>
+        <button type="button" class="text-button" id="export-csv">Download CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Gene</th><th>Morphological feature</th><th>Module</th><th>Sign</th><th class="num">Weight</th></tr>
+          </thead>
+          <tbody id="edge-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="modules">
+      <div class="block-head">
+        <h2>Refined modules</h2>
+      </div>
+      <div class="module-grid" id="module-grid"></div>
+    </section>
+
+    <section class="block" id="citation">
+      <div class="block-head">
+        <h2>Citation</h2>
+        <button type="button" class="text-button" id="copy-bib">Copy BibTeX</button>
+      </div>
+      <pre class="bibtex" id="bibtex">@article{mmc2026,
+  title   = {Coupling tissue morphology to gene programs across human cancers},
+  author  = {Author, First and Author, Second and Author, Third and Author, Corresponding},
+  journal = {Journal Name},
+  year    = {2026},
+  doi     = {10.xxxx/xxxxx}
+}</pre>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <div class="foot-inner">
+      <span>MMC Network Explorer</span>
+      <span id="foot-dataset"></span>
+    </div>
+  </footer>
+
+  <div id="tip" class="net-tip" hidden></div>
+
+  <script src="datasets.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

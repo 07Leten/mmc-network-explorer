@@ -1,0 +1,20 @@
+window.MMC_DATASETS = [
+  {
+    id: "bowel",
+    organ: "Bowel",
+    cancer: "Colorectal adenocarcinoma",
+    short: "Colorectal cancer",
+    code: "COAD",
+    file: "bowel_data.js",
+    available: true,
+    presets: { genes: ["CEACAM5", "AXIN2", "SLC12A2", "TAGLN", "MYL9", "COL1A1"], modules: [8, 7] },
+    initial: { genes: ["CEACAM5", "MYL9"], modules: [8] },
+  },
+  { id: "breast", organ: "Breast", cancer: "Breast invasive carcinoma", short: "Breast cancer", code: "BRCA", available: false },
+  { id: "lung", organ: "Lung", cancer: "Lung adenocarcinoma / squamous cell carcinoma", short: "Lung cancer", code: "LUAD · LUSC", available: false },
+  { id: "kidney", organ: "Kidney", cancer: "Renal clear cell / papillary cell carcinoma", short: "Kidney cancer", code: "KIRC · KIRP", available: false },
+  { id: "liver", organ: "Liver", cancer: "Liver hepatocellular carcinoma", short: "Liver cancer", code: "LIHC", available: false },
+  { id: "brain", organ: "Brain", cancer: "Brain lower grade glioma", short: "Lower grade glioma", code: "LGG", available: false },
+  { id: "pancreas", organ: "Pancreas", cancer: "Pancreatic adenocarcinoma", short: "Pancreatic cancer", code: "PAAD", available: false },
+  { id: "uterus", organ: "Uterus", cancer: "Uterine corpus endometrial carcinoma", short: "Endometrial cancer", code: "UCEC", available: false },
+];
