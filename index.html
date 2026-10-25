@@ -14,7 +14,7 @@
         <span class="brand-name">Network Explorer</span>
       </a>
       <div class="cancer-picker" id="cancer-picker">
-        <span class="picker-label">Cancer type</span>
+        <span class="picker-label">Organ</span>
         <button type="button" class="picker-button" id="picker-button" aria-haspopup="listbox" aria-expanded="false">
           <span id="picker-current">—</span>
           <span class="picker-caret" aria-hidden="true"></span>
@@ -60,13 +60,10 @@
             Histological morphology and molecular state are two complementary readouts of a tumour, yet how
             specific tissue patterns couple to gene programs remains poorly mapped. Here we learn a
             morphology–molecule coupling (MMC) network from paired whole-slide images and transcriptomic
-            profiles, linking pathology foundation-model features to individual genes through comparable
-            association weights. Spectral clustering organises the joint network into refined modules, which
-            we annotate with Hallmark gene sets and vision–language morphology semantics. The resulting
-            atlas recovers known axes such as Wnt–β-catenin signalling in glandular tumour epithelium and
-            epithelial–mesenchymal transition in stromal and serrated architecture, and exposes
-            morphology-anchored candidates for further study. This explorer provides interactive access to
-            the network for each cancer type.
+            profiles. Each morphological node is one of the 1,024 UNI dimensions, labelled by its index
+            (MRM_427 is UNI dimension 427), and each gene node is a morphology-associated gene (MPG).
+            Spectral clustering organises the joint network into refined modules, which we annotate with
+            Hallmark gene sets. This explorer provides the learned network, MPGs and MRMs for every organ.
           </p>
         </div>
       </div>
@@ -83,14 +80,14 @@
       <aside class="panel controls">
         <p class="step"><span class="step-no">1</span>Select</p>
         <div class="tabs" role="tablist">
-          <button class="tab" role="tab" data-mode="gene" aria-selected="true">Genes</button>
+          <button class="tab" role="tab" data-mode="gene" aria-selected="true">MPGs</button>
           <button class="tab" role="tab" data-mode="module" aria-selected="false">Modules</button>
         </div>
 
         <div id="gene-tools" class="tool-group">
           <label class="field-label" for="search">Gene symbol</label>
           <div class="search">
-            <input id="search" type="search" placeholder="e.g. CEACAM5" autocomplete="off" spellcheck="false">
+            <input id="search" type="search" placeholder="Search an MPG" autocomplete="off" spellcheck="false">
             <ul id="search-results" class="search-results" role="listbox" hidden></ul>
           </div>
           <p id="search-note" class="search-note" hidden></p>
@@ -148,7 +145,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Gene</th><th>Morphological feature</th><th>Module</th><th>Sign</th><th class="num">Weight</th></tr>
+            <tr><th>MPG</th><th>MRM</th><th>Module</th><th>Sign</th><th class="num">Weight</th></tr>
           </thead>
           <tbody id="edge-rows"></tbody>
         </table>

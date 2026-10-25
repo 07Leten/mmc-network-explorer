@@ -58,7 +58,9 @@
       1: "#7b9478",
       9: "#9c5f6e",
       0: "#4e7fa7",
+      2: "#c17b4a",
       3: "#c89c49",
+      5: "#5e8c8a",
     };
     const EDGE_TONE = {
       pos: ["#a6bccf", "#3f6f97"],
@@ -146,13 +148,14 @@
     }
 
     function sci(x) {
+      if (x == null || !Number.isFinite(x) || x <= 0) return "—";
       const e = Math.floor(Math.log10(x));
       if (e >= -1) return x.toPrecision(2);
       return `${(x / Math.pow(10, e)).toFixed(1)} × 10<sup>−${-e}</sup>`;
     }
 
     function signed(w, sign) {
-      return `${sign < 0 ? "−" : "+"}${w.toFixed(2)}`;
+      return `${sign < 0 ? "−" : "+"}${w.toFixed(3)}`;
     }
 
     function morphLabel(id) {
@@ -227,10 +230,10 @@
 
     function rankGenes(moduleSet) {
       const ranked = [];
-      for (const [gene, rows] of Object.entries(D.cross)) {
-        const hits = rows.filter(([m]) => moduleSet.has(D.morphs[m].module));
-        if (!hits.length) continue;
-        ranked.push({ gene, score: hits.reduce((s, r) => s + r[1], 0), hits });
+      for (const [gene, info] of Object.entries(D.genes)) {
+        if (!moduleSet.has(info.module)) continue;
+        const hits = (D.cross[gene] || []).filter(([m]) => D.morphs[m] && moduleSet.has(D.morphs[m].module));
+        ranked.push({ gene, score: info.z || 0, hits });
       }
       ranked.sort((a, b) => b.score - a.score);
       return ranked;
@@ -262,7 +265,7 @@
         if (e.kind === "cross") strength.set(e.b, (strength.get(e.b) || 0) + e.w);
       }
       for (const n of nodes) {
-        if (n.kind === "morph") n.r = 6.5 + 3.5 * clamp((strength.get(n.id) || 0) / 3, 0, 1);
+        if (n.kind === "morph") n.r = 6.5 + 3.5 * clamp((strength.get(n.id) || 0) / 0.2, 0, 1);
       }
       return { nodes, edges, byId: nodeMap, adj, ...extra };
     }
@@ -419,7 +422,7 @@
 
     function ensureStage() {
       if (svgRoot) return;
-      svgRoot = svg("svg", { role: "img", "aria-label": "Morphology–molecule network" });
+      svgRoot = svg("svg", { role: "img", "aria-label": "MPG–MRM network" });
       const defs = svg("defs");
       const filter = svg("filter", { id: "lift", x: "-60%", y: "-60%", width: "220%", height: "220%" });
       filter.appendChild(svg("feDropShadow", { dx: 0, dy: 3, stdDeviation: 2.6, "flood-color": "#183247", "flood-opacity": 0.3 }));
@@ -479,7 +482,7 @@
     }
 
     function makeEdgeEl(e) {
-      const width = e.kind !== "cross" ? 1.2 : e.w >= 1.07 ? 2.8 : e.w >= 0.59 ? 2 : 1.3;
+      const width = e.kind !== "cross" ? 1.2 : e.w >= 0.05 ? 2.8 : e.w >= 0.02 ? 2 : 1.3;
       const line = svg("line", {
         "stroke-width": width,
         "stroke-linecap": "round",
@@ -859,10 +862,10 @@
       let head;
       if (n.kind === "gene") {
         const desc = D.genes[n.id].desc;
-        head = `<strong class="mono">${esc(n.id)}</strong><div class="tip-meta">Gene · ${esc(moduleName(n.module))}</div>${desc ? `<div class="tip-meta">${esc(shorten(desc, 70))}</div>` : ""}`;
+        head = `<strong class="mono">${esc(n.id)}</strong><div class="tip-meta">MPG · ${esc(moduleName(n.module))}</div>${desc ? `<div class="tip-meta">${esc(shorten(desc, 70))}</div>` : ""}`;
       } else {
         const m = D.morphs[n.id];
-        head = `<strong>${esc(morphLabel(n.id))}</strong><div class="tip-meta">Morphology · ${esc(moduleName(n.module))}</div><div class="tip-meta">${esc(n.id)}${m.group ? ` · ${esc(m.group)}` : ""}</div>`;
+        head = `<strong>${esc(morphLabel(n.id))}</strong><div class="tip-meta">MRM · ${esc(moduleName(n.module))}</div><div class="tip-meta">${m.group ? esc(m.group) : esc(n.id)}</div>`;
       }
       tip.innerHTML = head + (rows.length ? `<div class="tip-rows">${rows.join("")}</div>` : "");
       tip.style.setProperty("--swatch", color);
@@ -1062,10 +1065,10 @@
       let kicker = "Network";
       let title = "No selection";
       if (g.nodes.length && state.mode === "gene") {
-        kicker = `Gene query · ${nGene} gene${nGene > 1 ? "s" : ""} · ${nMorph} features · ${nCross} edges`;
+        kicker = `MPG query · ${nGene} gene${nGene > 1 ? "s" : ""} · ${nMorph} MRMs · ${nCross} edges`;
         title = state.genes.length > 4 ? `${state.genes.slice(0, 4).join(", ")} +${state.genes.length - 4}` : state.genes.join(", ");
       } else if (g.nodes.length) {
-        kicker = `Module view · ${nMorph} features · ${nGene} representative genes`;
+        kicker = `Module view · ${nMorph} MRMs · ${nGene} representative MPGs`;
         title = state.modules.length === 1 ? moduleName(state.modules[0]) : `${state.modules.length} modules`;
       }
       $("stage-kicker").textContent = kicker;
@@ -1074,7 +1077,7 @@
       if (!g.nodes.length) {
         const genePresets = GENE_PRESETS.slice(0, 3).map((s) => `<button type="button" class="preset" data-gene="${s}">${s}</button>`);
         const modPresets = MODULE_PRESETS.map((id) => `<button type="button" class="preset" data-module="${id}">${esc(moduleName(id))}</button>`);
-        emptyState.innerHTML = `<p>Select a gene or a module</p><div class="presets">${genePresets.concat(modPresets).join("")}</div>`;
+        emptyState.innerHTML = `<p>Select an MPG or a module</p><div class="presets">${genePresets.concat(modPresets).join("")}</div>`;
       }
     }
 
@@ -1083,8 +1086,8 @@
       const mods = [...new Set(g.nodes.map((n) => n.module))].sort((a, b) => MODULE_ORDER.indexOf(a) - MODULE_ORDER.indexOf(b));
       const dotted = (c, w) => `<svg width="30" height="8"><line x1="3" y1="4" x2="27" y2="4" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="0.01 ${3.2 + w * 1.5}"/></svg>`;
       const parts = [
-        `<span class="legend-item"><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="#e9e4da" stroke="#64717c" stroke-width="1.5"/></svg>Morphological feature</span>`,
-        `<span class="legend-item"><svg width="14" height="14"><polygon points="7,1 13,7 7,13 1,7" fill="#64717c"/></svg>Gene</span>`,
+        `<span class="legend-item"><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="#e9e4da" stroke="#64717c" stroke-width="1.5"/></svg>MRM</span>`,
+        `<span class="legend-item"><svg width="14" height="14"><polygon points="7,1 13,7 7,13 1,7" fill="#64717c"/></svg>MPG</span>`,
         `<span class="legend-sep"></span>`,
         `<span class="legend-item">${dotted(EDGE_TONE.pos[1], 2)}Positive</span>`,
         `<span class="legend-item">${dotted(EDGE_TONE.neg[1], 2)}Negative</span>`,
@@ -1125,10 +1128,10 @@
       return `<article class="module-card" style="--swatch:${colorOf(id)}">
         <p class="detail-kicker">Module ${id}</p>
         <h3>${esc(m.name)}</h3>
-        <p class="stat-line">${m.nMorph} features · ${m.nGene} genes · overlap ${esc(m.overlap)} · FDR ${sci(m.fdr)}</p>
-        <p class="sub-head">Morphology</p>
+        <p class="stat-line">${m.nMorph} MRMs · ${m.nGene} MPGs · overlap ${esc(m.overlap)} · FDR ${sci(m.fdr)}</p>
+        <p class="sub-head">MRMs</p>
         <div class="terms">${m.terms.map((t) => `<span class="term">${esc(t)}</span>`).join("") || `<span class="term">—</span>`}</div>
-        <p class="sub-head">Representative genes</p>
+        <p class="sub-head">Representative MPGs</p>
         <div class="gene-cloud">${repHtml}</div>
         <p class="sub-head">Hallmark genes</p>
         <p class="hallmark">${m.hallmark.map(esc).join(" ")}</p>
@@ -1140,11 +1143,11 @@
       const count = (kind) => g.edges.filter((e) => e.kind === kind).length;
       const nMorph = g.nodes.filter((n) => n.kind === "morph").length;
       return `<section class="detail-section"><p class="sub-head">Current view</p><dl class="kv">
-        <dt>Genes</dt><dd>${g.nodes.length - nMorph}</dd>
-        <dt>Morphological features</dt><dd>${nMorph}</dd>
-        <dt>Morphology–gene edges</dt><dd>${count("cross")}</dd>
-        <dt>Morphology–morphology edges</dt><dd>${count("morph")}</dd>
-        ${state.mode === "gene" ? `<dt>Gene–gene edges</dt><dd>${count("gene")}</dd>` : ""}
+        <dt>MPGs</dt><dd>${g.nodes.length - nMorph}</dd>
+        <dt>MRMs</dt><dd>${nMorph}</dd>
+        <dt>MPG–MRM edges</dt><dd>${count("cross")}</dd>
+        <dt>MRM–MRM edges</dt><dd>${count("morph")}</dd>
+        ${state.mode === "gene" ? `<dt>MPG–MPG edges</dt><dd>${count("gene")}</dd>` : ""}
       </dl></section>`;
     }
 
@@ -1160,20 +1163,20 @@
       let overall;
       if (n.kind === "gene") {
         const desc = D.genes[id].desc;
-        head = `<p class="detail-kicker"><span class="diamond" style="background:${color}"></span>Gene</p>
+        head = `<p class="detail-kicker"><span class="diamond" style="background:${color}"></span>MPG</p>
           <h3 class="detail-title mono">${esc(id)}</h3>${desc ? `<p class="detail-sub">${esc(desc)}</p>` : ""}${tag}`;
         if (!(state.mode === "gene" && state.genes.length === 1 && state.genes[0] === id)) actions.push(`<button type="button" class="action" data-act="explore" data-id="${esc(id)}">Explore gene</button>`);
         if (state.mode === "gene" && !state.genes.includes(id)) actions.push(`<button type="button" class="action ghost" data-act="add" data-id="${esc(id)}">Add to query</button>`);
         const top = (D.cross[id] || []).slice(0, 6);
-        overall = top.length ? { title: "Strongest morphological features", rows: top } : null;
+        overall = top.length ? { title: "Strongest MRMs", rows: top } : null;
       } else {
         const m = D.morphs[id];
-        head = `<p class="detail-kicker"><span class="dot" style="background:${color}"></span>Morphology</p>
+        head = `<p class="detail-kicker"><span class="dot" style="background:${color}"></span>MRM</p>
           <h3 class="detail-title">${esc(morphLabel(id))}</h3>
-          <p class="detail-sub">${esc(id)}${m.group ? ` · ${esc(m.group)}` : ""}</p>${tag}`;
+          <p class="detail-sub">${m.group ? esc(m.group) : esc(id)}</p>${tag}`;
         if (!(state.mode === "module" && state.modules.length === 1 && state.modules[0] === n.module)) actions.push(`<button type="button" class="action" data-act="module" data-module="${n.module}">Open module</button>`);
         const top = genesOfMorph(id).slice(0, 6);
-        overall = top.length ? { title: "Strongest genes", rows: top } : null;
+        overall = top.length ? { title: "Strongest MPGs", rows: top } : null;
       }
       const sections = [`<section class="detail-section">${back}${head}${actions.length ? `<div class="actions">${actions.join("")}</div>` : ""}</section>`];
       if (inView.length) {
@@ -1214,7 +1217,7 @@
               <span style="grid-column:1/-1;font-size:11.5px;color:var(--muted)">${s.module === null ? "—" : esc(moduleName(s.module))}</span></li>`;
           })
           .join("");
-        panel.innerHTML = `${guideHtml()}<section class="detail-section"><p class="sub-head">Dominant morphology module</p><ul class="rank-list">${rows}</ul></section>${viewStats()}`;
+        panel.innerHTML = `${guideHtml()}<section class="detail-section"><p class="sub-head">Dominant module</p><ul class="rank-list">${rows}</ul></section>${viewStats()}`;
         return;
       }
       const cards = state.modules
@@ -1230,7 +1233,7 @@
         return `<div class="guide">
           <h3>Select a node or module of interest</h3>
           <ol>
-            <li>Search a gene, or choose a refined module, in the <strong>Select</strong> panel.</li>
+            <li>Choose an organ, then search an MPG or a refined module.</li>
             <li>Hover over a node in the network to preview its strongest associations.</li>
             <li>Click a node to centre it and open its details here; double-click to expand it.</li>
           </ol>
@@ -1276,7 +1279,7 @@
           const tone = e.sign > 0 ? "pos" : "neg";
           return `<tr>
             <td><button type="button" class="link cell mono" data-id="${esc(e.a)}"><span class="diamond" style="background:${colorOf(D.genes[e.a].module)}"></span>${esc(e.a)}</button></td>
-            <td><button type="button" class="link" data-id="${esc(e.b)}">${esc(morphLabel(e.b))}<span class="feature-id">${esc(e.b)}</span></button></td>
+            <td><button type="button" class="link" data-id="${esc(e.b)}">${esc(morphLabel(e.b))}<span class="feature-id">${esc(m.group || e.b)}</span></button></td>
             <td><span class="cell"><span class="dot" style="background:${colorOf(m.module)}"></span>${esc(moduleName(m.module))}</span></td>
             <td class="${tone}">${e.sign > 0 ? "Positive" : "Negative"}</td>
             <td class="num"><span class="weight"><i class="${tone}" style="width:${Math.round((e.w / max) * 80)}px"></i>${e.w.toFixed(3)}</span></td>
@@ -1300,7 +1303,7 @@
           (m) => `<button type="button" class="module-tile" data-module="${m.id}" style="--swatch:${colorOf(m.id)}">
           <span class="tile-id">Module ${m.id}</span>
           <h3>${esc(m.name)}</h3>
-          <p class="stat-line">${m.nMorph} features · ${m.nGene} genes</p>
+          <p class="stat-line">${m.nMorph} MRMs · ${m.nGene} MPGs</p>
           <p class="stat-line">Overlap ${esc(m.overlap)} · FDR ${sci(m.fdr)}</p>
           <div class="terms">${m.terms.map((t) => `<span class="term">${esc(t)}</span>`).join("")}</div>
           <span class="open">Explore →</span>
@@ -1360,10 +1363,10 @@
 
     function exportCsv() {
       const rows = crossRows();
-      const lines = [["gene_symbol", "morph_node", "pathology", "refined_module_id", "module_annotation", "sign", "comparable_weight"].join(",")];
+      const lines = [["mpg", "mrm", "uni_dimension", "module_id", "module_annotation", "sign", "weight"].join(",")];
       for (const e of rows) {
         const m = D.morphs[e.b];
-        const cells = [e.a, e.b, morphLabel(e.b), m.module, moduleName(m.module), e.sign > 0 ? "positive" : "negative", e.w];
+        const cells = [e.a, e.b, m.group || "", m.module, moduleName(m.module), e.sign > 0 ? "positive" : "negative", e.w];
         lines.push(cells.map((c) => (/[",]/.test(String(c)) ? `"${String(c).replace(/"/g, '""')}"` : c)).join(","));
       }
       download(`${fileStem()}.csv`, `${lines.join("\n")}\n`, "text/csv");
@@ -1372,17 +1375,17 @@
     // ---------- init ----------
 
     $("metrics").innerHTML = [
-      ["Morphological features", D.stats.morph],
-      ["Genes", D.stats.gene],
-      ["Cross-modal edges", D.stats.cross],
+      ["MRMs", D.stats.morph],
+      ["MPGs", D.stats.gene],
+      ["MMC edges", D.stats.cross],
       ["Refined modules", D.stats.modules],
     ]
       .map(([k, v]) => `<div><dt>${k}</dt><dd>${v.toLocaleString("en-US")}</dd></div>`)
       .join("");
 
     document.title = `MMC Network Explorer · ${DS.short}`;
-    $("dataset-title").textContent = DS.cancer;
-    $("dataset-code").textContent = `${DS.organ} · ${DS.code}`;
+    $("dataset-title").textContent = DS.organ;
+    $("dataset-code").textContent = DS.code;
     $("foot-dataset").textContent = `${DS.cancer} (${DS.code})`;
 
     document.querySelectorAll('.paper-link[aria-disabled="true"]').forEach((a) => a.addEventListener("click", (ev) => ev.preventDefault()));

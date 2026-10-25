@@ -109,6 +109,8 @@ main {
   top: calc(100% + 6px);
   right: 0;
   min-width: 340px;
+  max-height: 70vh;
+  overflow: auto;
   margin: 0;
   padding: 6px 0;
   list-style: none;
