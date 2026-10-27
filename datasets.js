@@ -1,5 +1,37 @@
 window.MMC_DATASETS = [
   {
+    "id": "bladder",
+    "organ": "Bladder",
+    "cancer": "Bladder",
+    "short": "Bladder",
+    "code": "HEST-1k",
+    "file": "data/bladder.js",
+    "available": true,
+    "presets": {
+      "genes": [
+        "TPRG1",
+        "PERP",
+        "MYCL",
+        "UBC",
+        "CD24",
+        "PTMA"
+      ],
+      "modules": [
+        7,
+        8
+      ]
+    },
+    "initial": {
+      "genes": [
+        "TPRG1",
+        "PERP"
+      ],
+      "modules": [
+        7
+      ]
+    }
+  },
+  {
     "id": "bowel",
     "organ": "Bowel",
     "cancer": "Bowel",
@@ -32,6 +64,38 @@ window.MMC_DATASETS = [
     }
   },
   {
+    "id": "brain",
+    "organ": "Brain",
+    "cancer": "Brain",
+    "short": "Brain",
+    "code": "HEST-1k",
+    "file": "data/brain.js",
+    "available": true,
+    "presets": {
+      "genes": [
+        "NDUFA4",
+        "IL1RAP",
+        "ID4",
+        "SCGB2A2",
+        "SMOC1",
+        "CCK"
+      ],
+      "modules": [
+        3,
+        2
+      ]
+    },
+    "initial": {
+      "genes": [
+        "NDUFA4",
+        "IL1RAP"
+      ],
+      "modules": [
+        3
+      ]
+    }
+  },
+  {
     "id": "breast",
     "organ": "Breast",
     "cancer": "Breast",
@@ -43,10 +107,10 @@ window.MMC_DATASETS = [
       "genes": [
         "CXXC5",
         "POSTN",
+        "TAGLN2",
         "HECTD2",
-        "TPD52",
-        "ZEB1",
-        "P4HB"
+        "P4HB",
+        "TPD52"
       ],
       "modules": [
         1,
@@ -64,65 +128,65 @@ window.MMC_DATASETS = [
     }
   },
   {
-    "id": "lung",
-    "organ": "Lung",
-    "cancer": "Lung",
-    "short": "Lung",
+    "id": "cervix",
+    "organ": "Cervix",
+    "cancer": "Cervix",
+    "short": "Cervix",
     "code": "HEST-1k",
-    "file": "data/lung.js",
+    "file": "data/cervix.js",
     "available": true,
     "presets": {
       "genes": [
-        "FAS",
-        "AXIN2",
-        "NKX2-1",
-        "TRPC6",
-        "ELN",
-        "PCSK1"
+        "EEF1G",
+        "TNFRSF21",
+        "DLK2",
+        "SDC2",
+        "HES4",
+        "DDX39B"
       ],
       "modules": [
-        2,
-        6
-      ]
-    },
-    "initial": {
-      "genes": [
-        "FAS",
-        "AXIN2"
-      ],
-      "modules": [
-        2
-      ]
-    }
-  },
-  {
-    "id": "liver",
-    "organ": "Liver",
-    "cancer": "Liver",
-    "short": "Liver",
-    "code": "HEST-1k",
-    "file": "data/liver.js",
-    "available": true,
-    "presets": {
-      "genes": [
-        "SMYD2",
-        "MT2A",
-        "MT1E",
-        "TCIM",
-        "CTSB"
-      ],
-      "modules": [
-        0,
+        7,
         8
       ]
     },
     "initial": {
       "genes": [
-        "SMYD2",
-        "MT2A"
+        "EEF1G",
+        "TNFRSF21"
       ],
       "modules": [
-        0
+        7
+      ]
+    }
+  },
+  {
+    "id": "eye",
+    "organ": "Eye",
+    "cancer": "Eye",
+    "short": "Eye",
+    "code": "HEST-1k",
+    "file": "data/eye.js",
+    "available": true,
+    "presets": {
+      "genes": [
+        "TCAP",
+        "NDUFA4",
+        "ANGPTL7",
+        "GPX3",
+        "FOS"
+      ],
+      "modules": [
+        3,
+        7
+      ]
+    },
+    "initial": {
+      "genes": [
+        "TCAP",
+        "NDUFA4"
+      ],
+      "modules": [
+        3
       ]
     }
   },
@@ -159,34 +223,97 @@ window.MMC_DATASETS = [
     }
   },
   {
-    "id": "brain",
-    "organ": "Brain",
-    "cancer": "Brain",
-    "short": "Brain",
+    "id": "liver",
+    "organ": "Liver",
+    "cancer": "Liver",
+    "short": "Liver",
     "code": "HEST-1k",
-    "file": "data/brain.js",
+    "file": "data/liver.js",
     "available": true,
     "presets": {
       "genes": [
-        "NDUFA4",
-        "IL1RAP",
-        "ID4",
-        "SCGB2A2",
-        "SMOC1",
-        "CCK"
+        "SMYD2",
+        "MT2A",
+        "MT1E",
+        "TCIM",
+        "CTSB"
       ],
       "modules": [
-        3,
-        2
+        0,
+        8
       ]
     },
     "initial": {
       "genes": [
-        "NDUFA4",
-        "IL1RAP"
+        "SMYD2",
+        "MT2A"
       ],
       "modules": [
-        3
+        0
+      ]
+    }
+  },
+  {
+    "id": "lung",
+    "organ": "Lung",
+    "cancer": "Lung",
+    "short": "Lung",
+    "code": "HEST-1k",
+    "file": "data/lung.js",
+    "available": true,
+    "presets": {
+      "genes": [
+        "FAS",
+        "AXIN2",
+        "NKX2-1",
+        "TRPC6",
+        "ELN",
+        "PCSK1"
+      ],
+      "modules": [
+        2,
+        6
+      ]
+    },
+    "initial": {
+      "genes": [
+        "FAS",
+        "AXIN2"
+      ],
+      "modules": [
+        2
+      ]
+    }
+  },
+  {
+    "id": "ovary",
+    "organ": "Ovary",
+    "cancer": "Ovary",
+    "short": "Ovary",
+    "code": "HEST-1k",
+    "file": "data/ovary.js",
+    "available": true,
+    "presets": {
+      "genes": [
+        "CELSR1",
+        "PDZK1",
+        "ELF4",
+        "SPECC1",
+        "ERBB2",
+        "SUMO4"
+      ],
+      "modules": [
+        2,
+        7
+      ]
+    },
+    "initial": {
+      "genes": [
+        "CELSR1",
+        "PDZK1"
+      ],
+      "modules": [
+        2
       ]
     }
   },
@@ -255,134 +382,6 @@ window.MMC_DATASETS = [
     }
   },
   {
-    "id": "uterus",
-    "organ": "Uterus",
-    "cancer": "Uterus",
-    "short": "Uterus",
-    "code": "HEST-1k",
-    "file": "data/uterus.js",
-    "available": true,
-    "presets": {
-      "genes": [
-        "RAMP1",
-        "CRIM1",
-        "HBA2",
-        "NBL1",
-        "MEST",
-        "PAPPA"
-      ],
-      "modules": [
-        8,
-        7
-      ]
-    },
-    "initial": {
-      "genes": [
-        "RAMP1",
-        "CRIM1"
-      ],
-      "modules": [
-        8
-      ]
-    }
-  },
-  {
-    "id": "ovary",
-    "organ": "Ovary",
-    "cancer": "Ovary",
-    "short": "Ovary",
-    "code": "HEST-1k",
-    "file": "data/ovary.js",
-    "available": true,
-    "presets": {
-      "genes": [
-        "CELSR1",
-        "PDZK1",
-        "ELF4",
-        "SPECC1",
-        "ERBB2",
-        "SUMO4"
-      ],
-      "modules": [
-        2,
-        7
-      ]
-    },
-    "initial": {
-      "genes": [
-        "CELSR1",
-        "PDZK1"
-      ],
-      "modules": [
-        2
-      ]
-    }
-  },
-  {
-    "id": "cervix",
-    "organ": "Cervix",
-    "cancer": "Cervix",
-    "short": "Cervix",
-    "code": "HEST-1k",
-    "file": "data/cervix.js",
-    "available": true,
-    "presets": {
-      "genes": [
-        "EEF1G",
-        "TNFRSF21",
-        "DLK2",
-        "SDC2",
-        "HES4",
-        "DDX39B"
-      ],
-      "modules": [
-        7,
-        8
-      ]
-    },
-    "initial": {
-      "genes": [
-        "EEF1G",
-        "TNFRSF21"
-      ],
-      "modules": [
-        7
-      ]
-    }
-  },
-  {
-    "id": "bladder",
-    "organ": "Bladder",
-    "cancer": "Bladder",
-    "short": "Bladder",
-    "code": "HEST-1k",
-    "file": "data/bladder.js",
-    "available": true,
-    "presets": {
-      "genes": [
-        "TPRG1",
-        "PERP",
-        "MYCL",
-        "UBC",
-        "CD24",
-        "PTMA"
-      ],
-      "modules": [
-        7,
-        8
-      ]
-    },
-    "initial": {
-      "genes": [
-        "TPRG1",
-        "PERP"
-      ],
-      "modules": [
-        7
-      ]
-    }
-  },
-  {
     "id": "skin",
     "organ": "Skin",
     "cancer": "Skin",
@@ -415,33 +414,34 @@ window.MMC_DATASETS = [
     }
   },
   {
-    "id": "eye",
-    "organ": "Eye",
-    "cancer": "Eye",
-    "short": "Eye",
+    "id": "uterus",
+    "organ": "Uterus",
+    "cancer": "Uterus",
+    "short": "Uterus",
     "code": "HEST-1k",
-    "file": "data/eye.js",
+    "file": "data/uterus.js",
     "available": true,
     "presets": {
       "genes": [
-        "TCAP",
-        "NDUFA4",
-        "ANGPTL7",
-        "GPX3",
-        "FOS"
+        "RAMP1",
+        "CRIM1",
+        "HBA2",
+        "NBL1",
+        "MEST",
+        "PAPPA"
       ],
       "modules": [
-        3,
+        8,
         7
       ]
     },
     "initial": {
       "genes": [
-        "TCAP",
-        "NDUFA4"
+        "RAMP1",
+        "CRIM1"
       ],
       "modules": [
-        3
+        8
       ]
     }
   }

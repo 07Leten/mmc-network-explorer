@@ -6,7 +6,9 @@
   const DS = DATASETS.find((d) => d.id === requested && d.available) || DATASETS.find((d) => d.available);
 
   setupPicker();
-  loadScript(DS.file).then(() => start(window.MMC_DATA[DS.id]));
+  loadScript(DS.file).then(() => start(window.MMC_DATA[DS.id])).catch(() => {
+    document.getElementById("network").textContent = "Unable to load this dataset. Please choose another dataset or reload the page.";
+  });
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -19,32 +21,18 @@
   }
 
   function setupPicker() {
-    const button = document.getElementById("picker-button");
-    const menu = document.getElementById("picker-menu");
-    document.getElementById("picker-current").innerHTML = `${DS.short}<span class="code">${DS.code}</span>`;
-    menu.innerHTML = DATASETS.map(
-      (d) => `<li role="option" data-id="${d.id}" aria-selected="${d.id === DS.id}" aria-disabled="${!d.available}">
-        <span class="organ">${d.organ}</span><span class="code">${d.code}</span>
-        <span class="cancer">${d.cancer}</span>${d.available ? "" : '<span class="soon">Coming soon</span>'}</li>`,
-    ).join("");
-    const close = () => {
-      menu.hidden = true;
-      button.setAttribute("aria-expanded", "false");
-    };
-    button.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      menu.hidden = !menu.hidden;
-      button.setAttribute("aria-expanded", String(!menu.hidden));
+    document.querySelectorAll("[data-dataset-select]").forEach((select) => {
+      for (const d of DATASETS.filter((d) => d.available)) {
+        select.add(new Option(`${d.organ} · ${d.code}`, d.id));
+      }
+      select.value = DS.id;
+      select.addEventListener("change", () => {
+        if (select.value === DS.id) return;
+        const url = new URL(location.href);
+        url.searchParams.set("cancer", select.value);
+        location.assign(url.href);
+      });
     });
-    menu.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      const li = ev.target.closest("li");
-      if (!li || li.getAttribute("aria-disabled") === "true") return;
-      close();
-      if (li.dataset.id !== DS.id) location.search = `?cancer=${li.dataset.id}`;
-    });
-    document.addEventListener("click", close);
-    document.addEventListener("keydown", (ev) => ev.key === "Escape" && close());
   }
 
   function start(D) {
@@ -246,13 +234,36 @@
       for (const [id, m] of Object.entries(D.morphs)) {
         if (set.has(m.module)) nodes.set(id, morphNode(id));
       }
-      const reps = rankGenes(set).slice(0, REP_GENES);
+      const reps = rankGenes(set).filter((rep) => rep.hits.length).slice(0, REP_GENES);
       for (const rep of reps) {
         nodes.set(rep.gene, geneNode(rep.gene));
         for (const [m, w, sign] of rep.hits.slice(0, REP_EDGES)) edges.push({ a: rep.gene, b: m, w, sign, kind: "cross" });
       }
-      contextEdges(nodes, edges, false);
-      return finishGraph(nodes, edges, { reps: reps.map((r) => r.gene) });
+      // Top genes alone cover only a few MRMs. Add each remaining MRM's
+      // strongest retained partner from its own module, using real W edges.
+      const linkedMorphs = new Set(edges.map((e) => e.b));
+      for (const [id, node] of nodes) {
+        if (node.kind !== "morph" || linkedMorphs.has(id)) continue;
+        const best = genesOfMorph(id).find(([gene]) => D.genes[gene].module === node.module);
+        if (!best) continue;
+        const [gene, w, sign] = best;
+        if (!nodes.has(gene)) nodes.set(gene, geneNode(gene));
+        edges.push({ a: gene, b: id, w, sign, kind: "cross" });
+      }
+      contextEdges(nodes, edges, true);
+      // A node can genuinely have no retained links within its own module.
+      // Omit it from the preview and disclose the count, keeping totals intact.
+      const linked = new Set(edges.flatMap((e) => [e.a, e.b]));
+      let hiddenMorphs = 0;
+      for (const [id, node] of nodes) {
+        if (linked.has(id)) continue;
+        if (node.kind === "morph") hiddenMorphs += 1;
+        nodes.delete(id);
+      }
+      return finishGraph(nodes, edges, {
+        reps: [...nodes.values()].filter((n) => n.kind === "gene").map((n) => n.id),
+        hiddenMorphs,
+      });
     }
 
     function finishGraph(nodeMap, edges, extra) {
@@ -461,7 +472,7 @@
     }
 
     function makeNodeEl(n) {
-      const g = svg("g", { class: "n" });
+      const g = svg("g", { class: "n", "data-node-id": n.id });
       const color = colorOf(n.module);
       let shape;
       if (n.kind === "gene") {
@@ -484,6 +495,8 @@
     function makeEdgeEl(e) {
       const width = e.kind !== "cross" ? 1.2 : e.w >= 0.05 ? 2.8 : e.w >= 0.02 ? 2 : 1.3;
       const line = svg("line", {
+        "data-source": e.a,
+        "data-target": e.b,
         "stroke-width": width,
         "stroke-linecap": "round",
         "stroke-dasharray": `0.01 ${(3.2 + width * 1.5).toFixed(1)}`,
@@ -1068,11 +1081,13 @@
         kicker = `MPG query · ${nGene} gene${nGene > 1 ? "s" : ""} · ${nMorph} MRMs · ${nCross} edges`;
         title = state.genes.length > 4 ? `${state.genes.slice(0, 4).join(", ")} +${state.genes.length - 4}` : state.genes.join(", ");
       } else if (g.nodes.length) {
-        kicker = `Module view · ${nMorph} MRMs · ${nGene} representative MPGs`;
+        kicker = `Module view · ${nMorph} MRMs · ${nGene} MPGs · ${nCross} MMC edges`;
         title = state.modules.length === 1 ? moduleName(state.modules[0]) : `${state.modules.length} modules`;
       }
       $("stage-kicker").textContent = kicker;
       $("stage-title").textContent = title;
+      $("stage-note").hidden = state.mode !== "module" || !state.modules.length;
+      $("stage-note").textContent = `Preview: strongest links from representative MPGs, plus a retained partner for each MRM where available.${g.hiddenMorphs ? ` ${g.hiddenMorphs} MRMs with no retained links in this module view are omitted.` : ""}`;
 
       if (!g.nodes.length) {
         const genePresets = GENE_PRESETS.slice(0, 3).map((s) => `<button type="button" class="preset" data-gene="${s}">${s}</button>`);
@@ -1131,7 +1146,7 @@
         <p class="stat-line">${m.nMorph} MRMs · ${m.nGene} MPGs · overlap ${esc(m.overlap)} · FDR ${sci(m.fdr)}</p>
         <p class="sub-head">MRMs</p>
         <div class="terms">${m.terms.map((t) => `<span class="term">${esc(t)}</span>`).join("") || `<span class="term">—</span>`}</div>
-        <p class="sub-head">Representative MPGs</p>
+        <p class="sub-head">MPGs in preview</p>
         <div class="gene-cloud">${repHtml}</div>
         <p class="sub-head">Hallmark genes</p>
         <p class="hallmark">${m.hallmark.map(esc).join(" ")}</p>
@@ -1147,7 +1162,7 @@
         <dt>MRMs</dt><dd>${nMorph}</dd>
         <dt>MPG–MRM edges</dt><dd>${count("cross")}</dd>
         <dt>MRM–MRM edges</dt><dd>${count("morph")}</dd>
-        ${state.mode === "gene" ? `<dt>MPG–MPG edges</dt><dd>${count("gene")}</dd>` : ""}
+        <dt>MPG–MPG edges</dt><dd>${count("gene")}</dd>
       </dl></section>`;
     }
 
@@ -1200,7 +1215,7 @@
         return;
       }
       if (!g.nodes.length) {
-        panel.innerHTML = `${guideHtml(true)}<section class="detail-section"><p class="sub-head">Refined modules</p>
+        panel.innerHTML = `${guideHtml(true)}<section class="detail-section"><p class="sub-head">Modules</p>
           <ul class="rank-list">${D.modules
             .map((m) => `<li data-act="module" data-module="${m.id}"><span class="label"><span class="dot" style="background:${colorOf(m.id)}"></span><span>${esc(m.name)}</span></span><span class="value" style="color:var(--faint)">${m.nMorph} · ${m.nGene}</span></li>`)
             .join("")}</ul></section>`;
@@ -1223,7 +1238,7 @@
       const cards = state.modules
         .slice()
         .sort((a, b) => MODULE_ORDER.indexOf(a) - MODULE_ORDER.indexOf(b))
-        .map((id) => moduleCard(id, state.modules.length === 1 ? g.reps : rankGenes(new Set([id])).slice(0, REP_GENES).map((r) => r.gene)))
+        .map((id) => moduleCard(id, g.reps.filter((gene) => D.genes[gene].module === id)))
         .join("");
       panel.innerHTML = `${guideHtml()}<section class="detail-section">${cards}</section>${viewStats()}`;
     }
@@ -1233,7 +1248,7 @@
         return `<div class="guide">
           <h3>Select a node or module of interest</h3>
           <ol>
-            <li>Choose an organ, then search an MPG or a refined module.</li>
+            <li>Choose an organ, then search an MPG or a module.</li>
             <li>Hover over a node in the network to preview its strongest associations.</li>
             <li>Click a node to centre it and open its details here; double-click to expand it.</li>
           </ol>
@@ -1333,8 +1348,8 @@
     }
 
     function fileStem() {
-      if (state.mode === "gene") return `mmc_bowel_genes_${state.genes.join("-") || "none"}`;
-      return `mmc_bowel_modules_${state.modules.join("-") || "none"}`;
+      if (state.mode === "gene") return `mmc_${DS.id}_genes_${state.genes.join("-") || "none"}`;
+      return `mmc_${DS.id}_modules_${state.modules.join("-") || "none"}`;
     }
 
     function exportSvg() {
@@ -1378,13 +1393,12 @@
       ["MRMs", D.stats.morph],
       ["MPGs", D.stats.gene],
       ["MMC edges", D.stats.cross],
-      ["Refined modules", D.stats.modules],
+      ["Modules", D.stats.modules],
     ]
       .map(([k, v]) => `<div><dt>${k}</dt><dd>${v.toLocaleString("en-US")}</dd></div>`)
       .join("");
 
     document.title = `MMC Network Explorer · ${DS.short}`;
-    $("dataset-title").textContent = DS.organ;
     $("dataset-code").textContent = DS.code;
     $("foot-dataset").textContent = `${DS.cancer} (${DS.code})`;
 

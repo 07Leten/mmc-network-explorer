@@ -14,12 +14,8 @@
         <span class="brand-name">Network Explorer</span>
       </a>
       <div class="cancer-picker" id="cancer-picker">
-        <span class="picker-label">Organ</span>
-        <button type="button" class="picker-button" id="picker-button" aria-haspopup="listbox" aria-expanded="false">
-          <span id="picker-current">—</span>
-          <span class="picker-caret" aria-hidden="true"></span>
-        </button>
-        <ul class="picker-menu" id="picker-menu" role="listbox" hidden></ul>
+        <label class="picker-label" for="organ-select">Organ</label>
+        <select class="dataset-select" id="organ-select" data-dataset-select aria-label="Select organ"></select>
       </div>
     </div>
     <div class="mast-rule"></div>
@@ -62,17 +58,18 @@
             morphology–molecule coupling (MMC) network from paired whole-slide images and transcriptomic
             profiles. Each morphological node is one of the 1,024 UNI dimensions, labelled by its index
             (MRM_427 is UNI dimension 427), and each gene node is a morphology-associated gene (MPG).
-            Spectral clustering organises the joint network into refined modules, which we annotate with
+            Spectral clustering organises the joint network into modules, which we annotate with
             Hallmark gene sets. This explorer provides the learned network, MPGs and MRMs for every organ.
           </p>
         </div>
       </div>
 
       <aside class="dataset-card">
-        <p class="dataset-kicker">Current dataset</p>
-        <h2 id="dataset-title">—</h2>
+        <label class="dataset-kicker" for="dataset-select">Current dataset</label>
+        <select class="dataset-select card-select" id="dataset-select" data-dataset-select aria-describedby="dataset-code edge-note"></select>
         <p class="dataset-code" id="dataset-code"></p>
         <dl class="metrics" id="metrics"></dl>
+        <p class="dataset-note" id="edge-note">MMC edges pass the module-analysis |W| filter. Network previews show selected strongest associations.</p>
       </aside>
     </section>
 
@@ -97,7 +94,7 @@
         </div>
 
         <div id="module-tools" class="tool-group" hidden>
-          <p class="field-label">Refined modules</p>
+          <p class="field-label">Modules</p>
           <div id="module-list" class="module-list"></div>
         </div>
 
@@ -110,6 +107,7 @@
             <p class="step"><span class="step-no">2</span>Explore</p>
             <h2 id="stage-title">No selection</h2>
             <p class="stage-kicker" id="stage-kicker"></p>
+            <p class="stage-note" id="stage-note" hidden></p>
           </div>
           <div class="stage-tools" aria-label="View controls">
             <button type="button" class="icon-button" id="zoom-out" title="Zoom out">−</button>
@@ -154,7 +152,7 @@
 
     <section class="block" id="modules">
       <div class="block-head">
-        <h2>Refined modules</h2>
+        <h2>Modules</h2>
       </div>
       <div class="module-grid" id="module-grid"></div>
     </section>
